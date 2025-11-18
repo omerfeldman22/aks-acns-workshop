@@ -49,12 +49,6 @@ resource "azurerm_kubernetes_cluster" "demo" {
     type = "SystemAssigned"
   }
 
-  # Azure Monitor Container Insights integration
-  oms_agent {
-    log_analytics_workspace_id      = azurerm_log_analytics_workspace.demo.id
-    msi_auth_for_monitoring_enabled = true
-  }
-
   # Azure Monitor managed Prometheus metrics
   monitor_metrics {
     annotations_allowed = null
@@ -68,7 +62,9 @@ resource "azurerm_kubernetes_cluster" "demo" {
 
   lifecycle {
     ignore_changes = [
-      network_profile[0].advanced_networking
+      network_profile[0].advanced_networking,
+      microsoft_defender,
+      oms_agent
     ]
   }
 }
@@ -99,6 +95,17 @@ resource "azurerm_kubernetes_cluster_node_pool" "user" {
   depends_on = [azurerm_kubernetes_cluster.demo]
 }
 
+resource "null_resource" "enable_oms_and_flow_logs" {
+  provisioner "local-exec" {
+    command = "az aks enable-addons -a monitoring --enable-high-log-scale-mode -g ${azurerm_resource_group.demo.name} -n ${azurerm_kubernetes_cluster.demo.name} --workspace-resource-id ${azurerm_log_analytics_workspace.demo.id}"
+  }
+
+  depends_on = [
+    azurerm_kubernetes_cluster.demo,
+    azurerm_log_analytics_workspace.demo
+  ]
+}
+
 # Enable ACNS using AzAPI provider
 resource "azapi_update_resource" "aks_acns" {
   type        = "Microsoft.ContainerService/managedClusters@2025-09-02-preview"
@@ -124,10 +131,29 @@ resource "azapi_update_resource" "aks_acns" {
           }
         }
       }
+      azureMonitorProfile = {
+        metrics = {
+          enabled = true
+          kubeStateMetrics = {
+            metricLabelsAllowlist      = ""
+            metricAnnotationsAllowList = ""
+          }
+        }
+      }
+      addonProfiles = {
+        omsagent = {
+          enabled = true
+          config = {
+            logAnalyticsWorkspaceResourceID = azurerm_log_analytics_workspace.demo.id
+            useAADAuth                       = "true"
+            enableRetinaNetworkFlags        = "True"
+          }
+        }
+      }
     }
   }
 
-  depends_on = [azurerm_kubernetes_cluster.demo]
+  depends_on = [null_resource.enable_oms_and_flow_logs]
 }
 
 # ACR integration - Role assignment
@@ -163,6 +189,18 @@ resource "azurerm_role_assignment" "grafana_monitoring_data_reader" {
 
   depends_on = [
     azurerm_monitor_workspace.demo,
+    azurerm_dashboard_grafana.demo
+  ]
+}
+
+# Grafana - Log Analytics monitoring reader role for Container Insights
+resource "azurerm_role_assignment" "grafana_log_monitoring_reader" {
+  principal_id         = azurerm_dashboard_grafana.demo.identity[0].principal_id
+  role_definition_name = "Monitoring Reader"
+  scope                = azurerm_resource_group.demo.id
+
+  depends_on = [
+    azurerm_log_analytics_workspace.demo,
     azurerm_dashboard_grafana.demo
   ]
 }
