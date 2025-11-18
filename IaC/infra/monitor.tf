@@ -30,16 +30,6 @@ resource "azurerm_dashboard_grafana" "demo" {
   ]
 }
 
-resource "azurerm_log_analytics_workspace" "demo" {
-  name                = "${var.base_name}-log-analytics"
-  resource_group_name = azurerm_resource_group.demo.name
-  location            = var.region
-  sku                 = "PerGB2018"
-  retention_in_days   = 30
-}
-
-
-
 # Assign Grafana Admin role to current user
 resource "azurerm_role_assignment" "grafana_admin" {
   scope                = azurerm_dashboard_grafana.demo.id
@@ -47,4 +37,12 @@ resource "azurerm_role_assignment" "grafana_admin" {
   principal_id         = data.azurerm_client_config.current.object_id
 
   depends_on = [azurerm_dashboard_grafana.demo]
+}
+
+resource "azurerm_log_analytics_workspace" "demo" {
+  name                = "${var.base_name}-log-analytics"
+  resource_group_name = azurerm_resource_group.demo.name
+  location            = var.region
+  sku                 = "PerGB2018"
+  retention_in_days   = 30
 }
