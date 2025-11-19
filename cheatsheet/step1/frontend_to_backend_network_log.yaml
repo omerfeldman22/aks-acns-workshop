@@ -1,0 +1,22 @@
+apiVersion: acn.azure.com/v1alpha1
+kind: ContainerNetworkLog
+metadata:
+  name: frontend-to-backend
+spec:
+  includefilters:
+    - name: frontend-to-backend
+      from:
+        labelSelector:
+          matchLabels:
+            app: frontend
+      to:
+        labelSelector:
+          matchLabels:
+            app: backend
+      protocol:
+        - tcp
+        - udp
+        - dns
+      verdict:
+        - forwarded
+        - dropped

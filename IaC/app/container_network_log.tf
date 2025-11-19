@@ -41,13 +41,13 @@ resource "kubernetes_manifest" "container_network_log_external" {
     kind       = "ContainerNetworkLog"
 
     metadata = {
-      name = "any-to-backend"
+      name = "any-to-frontend"
     }
 
     spec = {
       includefilters = [
         {
-          name = "any-to-backend"
+          name = "any-to-frontend"
           to = {
             labelSelector = {
               matchLabels = {

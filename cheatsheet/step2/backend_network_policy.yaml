@@ -1,5 +1,3 @@
----
-# Cilium L7 Network Policy: Deny /deny endpoint (Azure CNS compatible)
 apiVersion: "cilium.io/v2"
 kind: CiliumNetworkPolicy
 metadata:
@@ -9,22 +7,6 @@ spec:
   endpointSelector:
     matchLabels:
       app: backend
-  egress:
-    - toEndpoints:
-      - matchLabels:
-          "k8s:io.kubernetes.pod.namespace": kube-system
-          "k8s:k8s-app": kube-dns
-      toPorts:
-        - ports:
-           - port: "53"
-             protocol: ANY
-          rules:
-            dns:
-              - matchPattern: "microsoft.com"
-              - matchPattern: "*.microsoft.com"
-    - toFQDNs:
-      - matchPattern: "microsoft.com"
-      - matchPattern: "*.microsoft.com"
   ingress:
   - fromEndpoints:
     - matchLabels:
