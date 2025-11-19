@@ -14,7 +14,7 @@ resource "azurerm_kubernetes_cluster" "demo" {
     min_count            = 2
     max_count            = 4
     vnet_subnet_id       = azurerm_subnet.aks.id
-    
+
     os_sku = "AzureLinux"
 
     upgrade_settings {
@@ -27,38 +27,29 @@ resource "azurerm_kubernetes_cluster" "demo" {
   network_profile {
     network_plugin      = "azure"
     network_plugin_mode = "overlay"
-    network_data_plane = "cilium"
-    
-    # Service and pod CIDR configuration
+    network_data_plane  = "cilium"
+
     service_cidr   = var.aks_service_cidr
     dns_service_ip = var.aks_dns_service_ip
     pod_cidr       = var.pod_cidr
-    
-    # Load balancer configuration - Standard SKU for public access
+
     load_balancer_sku = "standard"
-    
+
     ip_versions = ["IPv4"]
-    
+
     load_balancer_profile {
       managed_outbound_ip_count = 1
     }
   }
 
-  # System-assigned managed identity for AKS cluster
   identity {
     type = "SystemAssigned"
   }
 
-  # Azure Monitor managed Prometheus metrics
   monitor_metrics {
     annotations_allowed = null
     labels_allowed      = null
   }
-
-  depends_on = [
-    azurerm_subnet.aks,
-    azurerm_log_analytics_workspace.demo
-  ]
 
   lifecycle {
     ignore_changes = [
@@ -67,6 +58,11 @@ resource "azurerm_kubernetes_cluster" "demo" {
       oms_agent
     ]
   }
+
+  depends_on = [
+    azurerm_subnet.aks,
+    azurerm_log_analytics_workspace.demo
+  ]
 }
 
 # User node pool for workloads
@@ -78,7 +74,7 @@ resource "azurerm_kubernetes_cluster_node_pool" "user" {
   min_count             = 2
   max_count             = 4
   vnet_subnet_id        = azurerm_subnet.aks.id
-  
+
   os_sku = "AzureLinux"
 
   # Node labels for workload scheduling
@@ -95,6 +91,7 @@ resource "azurerm_kubernetes_cluster_node_pool" "user" {
   depends_on = [azurerm_kubernetes_cluster.demo]
 }
 
+# This process involves null_resource because as of the terraform implementation date (18/11/2025), the high log scale mode enablement is only supported via Azure CLI.
 resource "null_resource" "enable_oms_and_flow_logs" {
   provisioner "local-exec" {
     command = "az aks enable-addons -a monitoring --enable-high-log-scale-mode -g ${azurerm_resource_group.demo.name} -n ${azurerm_kubernetes_cluster.demo.name} --workspace-resource-id ${azurerm_log_analytics_workspace.demo.id}"
@@ -106,7 +103,7 @@ resource "null_resource" "enable_oms_and_flow_logs" {
   ]
 }
 
-# Enable ACNS using AzAPI provider
+# Enable ACNS using AzAPI provider because it's not yet supported in azurerm provider (18/11/2025)
 resource "azapi_update_resource" "aks_acns" {
   type        = "Microsoft.ContainerService/managedClusters@2025-09-02-preview"
   resource_id = azurerm_kubernetes_cluster.demo.id
@@ -131,6 +128,7 @@ resource "azapi_update_resource" "aks_acns" {
           }
         }
       }
+
       azureMonitorProfile = {
         metrics = {
           enabled = true
@@ -140,12 +138,13 @@ resource "azapi_update_resource" "aks_acns" {
           }
         }
       }
+      
       addonProfiles = {
         omsagent = {
           enabled = true
           config = {
             logAnalyticsWorkspaceResourceID = azurerm_log_analytics_workspace.demo.id
-            useAADAuth                       = "true"
+            useAADAuth                      = "true"
             enableRetinaNetworkFlags        = "True"
           }
         }
@@ -166,110 +165,6 @@ resource "azurerm_role_assignment" "aks_acr_pull" {
   depends_on = [
     azurerm_kubernetes_cluster.demo,
     azurerm_container_registry.demo
-  ]
-}
-
-# Grafana integration - Role assignment for monitoring
-resource "azurerm_role_assignment" "grafana_monitoring_reader" {
-  principal_id         = azurerm_dashboard_grafana.demo.identity[0].principal_id
-  role_definition_name = "Monitoring Reader"
-  scope                = azurerm_kubernetes_cluster.demo.id
-
-  depends_on = [
-    azurerm_kubernetes_cluster.demo,
-    azurerm_dashboard_grafana.demo
-  ]
-}
-
-# Grafana - Monitoring Data Reader role for Azure Monitor workspace
-resource "azurerm_role_assignment" "grafana_monitoring_data_reader" {
-  principal_id         = azurerm_dashboard_grafana.demo.identity[0].principal_id
-  role_definition_name = "Monitoring Data Reader"
-  scope                = azurerm_monitor_workspace.demo.id
-
-  depends_on = [
-    azurerm_monitor_workspace.demo,
-    azurerm_dashboard_grafana.demo
-  ]
-}
-
-# Grafana - Log Analytics monitoring reader role for Container Insights
-resource "azurerm_role_assignment" "grafana_log_monitoring_reader" {
-  principal_id         = azurerm_dashboard_grafana.demo.identity[0].principal_id
-  role_definition_name = "Monitoring Reader"
-  scope                = azurerm_resource_group.demo.id
-
-  depends_on = [
-    azurerm_log_analytics_workspace.demo,
-    azurerm_dashboard_grafana.demo
-  ]
-}
-
-# Azure Monitor integration - Data collection rule for Container Insights
-resource "azurerm_monitor_data_collection_rule" "ci" {
-  name                = "${var.base_name}-ci-dcr"
-  resource_group_name = azurerm_resource_group.demo.name
-  location            = var.region
-  
-  destinations {
-    log_analytics {
-      workspace_resource_id = azurerm_log_analytics_workspace.demo.id
-      name                  = "ciworkspace"
-    }
-  }
-
-  data_flow {
-    streams      = ["Microsoft-ContainerInsights-Group-Default"]
-    destinations = ["ciworkspace"]
-  }
-
-  data_sources {
-    extension {
-      name           = "ContainerInsightsExtension"
-      streams        = ["Microsoft-ContainerInsights-Group-Default"]
-      extension_name = "ContainerInsights"
-      extension_json = jsonencode({
-        dataCollectionSettings = {
-          interval               = "1m"
-          namespaceFilteringMode = "Off"
-          enableContainerLogV2   = true
-        }
-      })
-    }
-  }
-
-  depends_on = [
-    azurerm_log_analytics_workspace.demo
-  ]
-}
-
-# Data collection rule for Prometheus metrics
-resource "azurerm_monitor_data_collection_rule" "prometheus" {
-  name                = "${var.base_name}-prometheus-dcr"
-  resource_group_name = azurerm_resource_group.demo.name
-  location            = var.region
-  
-  destinations {
-    monitor_account {
-      monitor_account_id = azurerm_monitor_workspace.demo.id
-      name               = "MonitoringAccount"
-    }
-  }
-
-  data_flow {
-    streams      = ["Microsoft-PrometheusMetrics"]
-    destinations = ["MonitoringAccount"]
-  }
-
-  data_sources {
-    prometheus_forwarder {
-      name    = "PrometheusDataSource"
-      streams = ["Microsoft-PrometheusMetrics"]
-    }
-  }
-
-  depends_on = [
-    azurerm_monitor_workspace.demo
   ]
 }
 
