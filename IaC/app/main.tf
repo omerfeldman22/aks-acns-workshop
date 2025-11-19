@@ -609,21 +609,21 @@ resource "kubernetes_deployment_v1" "frontend" {
           }
         }
 
-        # Anti-affinity to keep frontend on different node from backend
+        node_selector = {
+          "workload" = "user"
+        }
+
+        # Anti-affinity to ensure frontend and backend run on different nodes
         affinity {
           pod_anti_affinity {
-            preferred_during_scheduling_ignored_during_execution {
-              weight = 100
-              pod_affinity_term {
-                label_selector {
-                  match_expressions {
-                    key      = "tier"
-                    operator = "In"
-                    values   = ["backend"]
-                  }
+            required_during_scheduling_ignored_during_execution {
+              label_selector {
+                match_labels = {
+                  tier = "backend"
                 }
-                topology_key = "kubernetes.io/hostname"
               }
+              topology_key = "kubernetes.io/hostname"
+              namespaces  = ["backend-ns"]
             }
           }
         }
@@ -741,21 +741,21 @@ resource "kubernetes_deployment_v1" "backend" {
           }
         }
 
-        # Anti-affinity to keep backend on different node from frontend
+        node_selector = {
+          "workload" = "user"
+        }
+
+        # Anti-affinity to ensure backend and frontend run on different nodes
         affinity {
           pod_anti_affinity {
-            preferred_during_scheduling_ignored_during_execution {
-              weight = 100
-              pod_affinity_term {
-                label_selector {
-                  match_expressions {
-                    key      = "tier"
-                    operator = "In"
-                    values   = ["frontend"]
-                  }
+            required_during_scheduling_ignored_during_execution {
+              label_selector {
+                match_labels = {
+                  tier = "frontend"
                 }
-                topology_key = "kubernetes.io/hostname"
               }
+              topology_key = "kubernetes.io/hostname"
+              namespaces  = ["frontend-ns"]
             }
           }
         }

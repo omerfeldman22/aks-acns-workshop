@@ -1,0 +1,26 @@
+apiVersion: "cilium.io/v2"
+kind: CiliumNetworkPolicy
+metadata:
+  name: frontend-network-policy
+  namespace: frontend-ns
+spec:
+  endpointSelector:
+    matchLabels:
+      app: frontend
+  egress:
+    - toEntities:
+      - cluster
+    - toEndpoints:
+      - matchLabels:
+          app: backend
+          "k8s:io.kubernetes.pod.namespace": backend-ns
+      toPorts:
+        - ports:
+          - port: "8000"
+            protocol: TCP
+          rules:
+            http:
+            - method: "GET"
+              path: "/allow"
+            - method: "GET"
+              path: "/health"
