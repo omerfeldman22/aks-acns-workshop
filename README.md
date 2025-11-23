@@ -63,16 +63,42 @@ az extension update --name aks-preview
 
 ### Enable Azure Account Preview Features
 
+This deployment requires registering Azure preview features. **Important:** Feature registration can take 10-15 minutes to complete.
+
+#### Register Advanced Networking Flow Logs Preview
+
+[AdvancedNetworkingFlowLogsPreview feature](https://learn.microsoft.com/en-us/azure/aks/advanced-container-networking-services-overview?tabs=cilium#register-the-advancednetworkingflowlogspreview-feature-flag)
+
+```bash
+az feature register --namespace "Microsoft.ContainerService" --name "AdvancedNetworkingFlowLogsPreview"
+```
+
+Check the registration status (wait until the state shows "Registered"):
+
+```bash
+az feature show --namespace "Microsoft.ContainerService" --name "AdvancedNetworkingFlowLogsPreview"
+```
+
+#### Register Advanced Networking L7 Policy Preview
+
 Enabling [AdvancedNetworkingL7PolicyPreview feature](https://learn.microsoft.com/en-us/azure/aks/advanced-container-networking-services-overview?tabs=cilium#register-the-advancednetworkingl7policypreview-feature-flag)
 
 ```bash
 az feature register --namespace "Microsoft.ContainerService" --name "AdvancedNetworkingL7PolicyPreview"
 ```
 
-check the registration status: (wait until the state shows "Registered")
+Check the registration status (wait until the state shows "Registered"):
 
 ```bash
 az feature show --namespace "Microsoft.ContainerService" --name "AdvancedNetworkingL7PolicyPreview"
+```
+
+#### Refresh the Resource Provider
+
+After both features are registered, refresh the Microsoft.ContainerService provider:
+
+```bash
+az provider register --namespace Microsoft.ContainerService
 ```
 
 ### Required Variables
