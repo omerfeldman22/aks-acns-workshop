@@ -99,6 +99,7 @@ resource "null_resource" "enable_oms_and_flow_logs" {
 
   depends_on = [
     azurerm_kubernetes_cluster.demo,
+    azurerm_kubernetes_cluster_node_pool.user,
     azurerm_log_analytics_workspace.demo
   ]
 }

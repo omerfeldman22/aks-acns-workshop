@@ -53,6 +53,28 @@ az account set --subscription "<subscription-id>"
 
 ## Configuration
 
+### Install AZ Preview extensions
+
+```bash
+az extension add --name aks-preview
+az extension update --name aks-preview
+```
+
+
+### Enable Azure Account Preview Features
+
+Enabling [AdvancedNetworkingL7PolicyPreview feature](https://learn.microsoft.com/en-us/azure/aks/advanced-container-networking-services-overview?tabs=cilium#register-the-advancednetworkingl7policypreview-feature-flag)
+
+```bash
+az feature register --namespace "Microsoft.ContainerService" --name "AdvancedNetworkingL7PolicyPreview"
+```
+
+check the registration status: (wait until the state shows "Registered")
+
+```bash
+az feature show --namespace "Microsoft.ContainerService" --name "AdvancedNetworkingL7PolicyPreview"
+```
+
 ### Required Variables
 
 Create a `terraform.tfvars` file in this directory with the following required variables:
