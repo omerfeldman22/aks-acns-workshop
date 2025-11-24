@@ -67,35 +67,33 @@ This deployment requires registering Azure preview features. **Important:** Feat
 
 #### Register Advanced Networking Flow Logs Preview
 
-[AdvancedNetworkingFlowLogsPreview feature](https://learn.microsoft.com/en-us/azure/aks/advanced-container-networking-services-overview?tabs=cilium#register-the-advancednetworkingflowlogspreview-feature-flag)
+Enabling [Advanced Networking Flow Logs](https://learn.microsoft.com/en-us/azure/aks/advanced-container-networking-services-overview?tabs=cilium#register-the-advancednetworkingflowlogspreview-feature-flag) feature
+
+Enabling [Advanced Networking L7Policy](https://learn.microsoft.com/en-us/azure/aks/advanced-container-networking-services-overview?tabs=cilium#register-the-advancednetworkingl7policypreview-feature-flag) feature
+
+Enabling [Advanced Networking WireGuard](https://learn.microsoft.com/en-us/azure/aks/advanced-container-networking-services-overview?tabs=cilium#register-the-advancednetworkingwireguardpreview-feature-flag) feature
+
+Enabling [Advanced Networking Performance](https://learn.microsoft.com/en-us/azure/aks/how-to-enable-ebpf-host-routing) feature 
 
 ```bash
 az feature register --namespace "Microsoft.ContainerService" --name "AdvancedNetworkingFlowLogsPreview"
+az feature register --namespace "Microsoft.ContainerService" --name "AdvancedNetworkingL7PolicyPreview"
+az feature register --namespace "Microsoft.ContainerService" --name "AdvancedNetworkingWireGuardPreview"
+az feature register --namespace "Microsoft.ContainerService" --name "AdvancedNetworkingPerformancePreview"
 ```
 
-Check the registration status (wait until the state shows "Registered"):
+Check the registration status (wait until all state shows "Registered"):
 
 ```bash
 az feature show --namespace "Microsoft.ContainerService" --name "AdvancedNetworkingFlowLogsPreview"
-```
-
-#### Register Advanced Networking L7 Policy Preview
-
-Enabling [AdvancedNetworkingL7PolicyPreview feature](https://learn.microsoft.com/en-us/azure/aks/advanced-container-networking-services-overview?tabs=cilium#register-the-advancednetworkingl7policypreview-feature-flag)
-
-```bash
-az feature register --namespace "Microsoft.ContainerService" --name "AdvancedNetworkingL7PolicyPreview"
-```
-
-Check the registration status (wait until the state shows "Registered"):
-
-```bash
 az feature show --namespace "Microsoft.ContainerService" --name "AdvancedNetworkingL7PolicyPreview"
+az feature show --namespace "Microsoft.ContainerService" --name "AdvancedNetworkingWireGuardPreview"
+az feature show --namespace "Microsoft.ContainerService" --name "AdvancedNetworkingPerformancePreview"
 ```
 
 #### Refresh the Resource Provider
 
-After both features are registered, refresh the Microsoft.ContainerService provider:
+After all features are registered, refresh the Microsoft.ContainerService provider:
 
 ```bash
 az provider register --namespace Microsoft.ContainerService
