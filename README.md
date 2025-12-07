@@ -1,6 +1,6 @@
-# Azure Infrastructure Deployment with Terraform
+# Advanced Container Networking Services Workshop
 
-This directory contains Terraform configurations for deploying the complete Azure infrastructure for the AKS Advanced Container Networking Services (ACNS) workshop.
+This directory contains all the assets needed for the AKS Advanced Container Networking Services (ACNS) workshop including Terraform configurations for deploying the complete Azure infrastructure, Presentation, Cheatsheet and more.
 
 ## Prerequisites
 
@@ -101,11 +101,11 @@ az provider register --namespace Microsoft.ContainerService
 
 ### Required Variables
 
-Create a `terraform.tfvars` file in this directory with the following required variables:
+Create a `terraform.tfvars` file in the `IaC` directory with the following required variables:
 
 ```hcl
 subscription_id = "your-subscription-id"
-base_name       = "your-unique-prefix"  # Used as prefix for all resources
+base_name       = "your-unique-prefix"  # Used as prefix for all resources (only letters)
 ```
 
 ### Optional Variables
@@ -127,7 +127,6 @@ grafana_major_version            = "11"
 ```hcl
 subscription_id = "12345678-1234-1234-1234-123456789abc"
 base_name       = "acnsworkshop"
-region          = "swedencentral"
 ```
 
 ## Deployment Steps
@@ -142,24 +141,32 @@ region          = "swedencentral"
    terraform init
    ```
 
-3. **Review the deployment plan:**
+3. **Apply the configuration:**
    ```bash
-   terraform plan
+   terraform apply -var-file="../terraform.tfvars" -auto-approve
    ```
 
-4. **Apply the configuration:**
-   ```bash
-   terraform apply
-   ```
-   
-   Review the proposed changes and type `yes` to confirm.
-
-5. **Configure kubectl access to the AKS cluster:**
+4. **Configure kubectl access to the AKS cluster:**
    ```bash
    az aks get-credentials --resource-group <resource-group-name> --name <cluster-name>
    ```
    
    The resource group and cluster names will be output after the apply completes.
+
+5. **Navigate to the application directory:**
+   ```bash
+   cd ../app
+   ```
+
+6. **Initialize Terraform:**
+   ```bash
+   terraform init
+   ```
+
+7. **Apply the configuration:**
+   ```bash
+   terraform apply -var-file="../terraform.tfvars" -auto-approve
+   ```
 
 ## What Gets Deployed
 
@@ -171,23 +178,18 @@ This Terraform configuration creates:
 - **Log Analytics Workspace** - For centralized logging
 - **Azure Monitor** - Monitoring and diagnostics
 - **Azure Managed Grafana** - Visualization and dashboards
-
-## Outputs
-
-After successful deployment, Terraform will display important information including:
-
-- Resource Group name
-- AKS cluster name
-- ACR login server
-- Grafana endpoint
-- Log Analytics Workspace ID
+- **Applications in AKS** - Both Frontend and Backend applications used in the workshop
+- **Advanced configuration enforcement** - Used to ease the use in this workshop
 
 ## Clean Up
 
 To destroy all created resources:
 
 ```bash
-terraform destroy
+cd IaC/app
+terraform destroy -var-file="../terraform.tfvars" -auto-approve
+cd ../infra
+terraform destroy -var-file="../terraform.tfvars" -auto-approve
 ```
 
 ⚠️ **Warning:** This will permanently delete all resources created by this configuration.
@@ -218,8 +220,7 @@ This configuration uses:
 
 ## Next Steps
 
-After infrastructure deployment:
+After infrastructure  & Application deployment:
 
-1. Deploy the application by navigating to `IaC/app/`
-2. Follow the workshop instructions for Advanced Container Networking Services configuration
+1. Follow the workshop instructions for Advanced Container Networking Services in the presentation
 3. Explore the monitoring dashboards in Grafana
