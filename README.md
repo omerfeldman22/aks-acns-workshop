@@ -18,6 +18,10 @@ This directory contains all the assets needed for the AKS Advanced Container Net
    - [Install kubectl](https://kubernetes.io/docs/tasks/tools/)
    - Verify installation: `kubectl version --client`
 
+4. **Docker Desktop**
+   - [Install Docker Desktop](https://www.docker.com/products/docker-desktop/)
+   - Verify installation: `docker version`
+
 ### Azure Requirements
 
 - **Active Azure Subscription**
