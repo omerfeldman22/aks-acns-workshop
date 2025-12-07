@@ -9,6 +9,21 @@ spec:
   endpointSelector:
     matchLabels:
       app: backend
+  ingress:
+  - fromEndpoints:
+    - matchLabels:
+        app: frontend
+        "k8s:io.kubernetes.pod.namespace": frontend-ns
+    toPorts:
+    - ports:
+      - port: "8000"
+        protocol: TCP
+      rules:
+        http:
+        - method: "GET"
+          path: "/allow"
+        - method: "GET"
+          path: "/health"
   egress:
     - toEndpoints:
       - matchLabels:
@@ -25,18 +40,4 @@ spec:
     - toFQDNs:
       - matchPattern: "microsoft.com"
       - matchPattern: "*.microsoft.com"
-  ingress:
-  - fromEndpoints:
-    - matchLabels:
-        app: frontend
-        "k8s:io.kubernetes.pod.namespace": frontend-ns
-    toPorts:
-    - ports:
-      - port: "8000"
-        protocol: TCP
-      rules:
-        http:
-        - method: "GET"
-          path: "/allow"
-        - method: "GET"
-          path: "/health"
+  
