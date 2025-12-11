@@ -227,4 +227,28 @@ This configuration uses:
 After infrastructure  & Application deployment:
 
 1. Follow the workshop instructions for Advanced Container Networking Services in the presentation
-3. Explore the monitoring dashboards in Grafana
+2. Explore the monitoring dashboards in Grafana
+
+## Additional Resources
+Grafana Dashboard Import steps
+
+1. Enter to the Azure Portal and find the managed grafana resource, then enter to its URL
+![alt text](images/grafana_resource_overview.png)
+
+2. Click on the Dashboards blade and enter the Azure Managed Prometheus folder
+![alt text](images/grafana_ui_overview.png)
+
+3. Here you can see all the dashboards within the directory, to import a new one, click on New and then New Dashboard 
+![alt text](images/grafana_new_dashboard1.png)
+
+4. Click on Import Dashboards, if a popup comes up, click on discard
+![alt text](images/grafana_new_dashboard2.png)
+
+5. Enter the dashboard URL that you got from the presentation and hit Load
+![alt text](images/grafana_new_dashboard3.png)
+
+6. Choose the Azure Managed Prometheus Folder and click import
+![alt text](images/grafana_new_dashboard4.png)
+
+7. Great, now you can head back to the dashboards view and enter the Azure Managed Prometheus folder and see the imported dashboard
+![alt text](images/grafana_new_dashboard5.png)
