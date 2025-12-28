@@ -149,6 +149,7 @@ base_name       = "acnsworkshop"
    ```bash
    terraform apply -var-file="../terraform.tfvars" -auto-approve
    ```
+   In case an error with the following text appears, wait a few minutes and rerun the terraform apply command: "User-installed iptables rules found. Number of affected nodes is X. Please remove the iptables rules before enabling advanced networking performance (advancedNetworking.performance.accelerationMode = BpfVeth). If there are no user-installed iptables rules, please try again after some time."
 
 4. **Configure kubectl access to the AKS cluster:**
    ```bash
